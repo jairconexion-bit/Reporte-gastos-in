@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ReporteGastos Pro</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --azul-900:#0f3057;
+    --azul-700:#1a4d8f;
+    --azul-500:#2e6fbb;
+    --azul-100:#e8f0fb;
+    --gris-100:#f4f6f9;
+    --gris-200:#e7ebf0;
+    --gris-400:#c3cbd6;
+    --gris-600:#6b7686;
+    --texto:#1c2530;
+    --verde:#1c8a4b;
+    --verde-bg:#e5f6ec;
+    --rojo:#c0392b;
+    --rojo-bg:#fbe9e7;
+    --blanco:#ffffff;
+    --radio:10px;
+    --sombra:0 2px 10px rgba(15,48,87,0.10);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--gris-100);
+    color:var(--texto);
+    padding-bottom:40px;
+  }
+  header.appbar{
+    background:var(--azul-900);
+    color:#fff;
+    padding:16px 16px;
+    position:sticky;
+    top:0;
+    z-index:20;
+    box-shadow:var(--sombra);
+  }
+  header.appbar .fila{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  header.appbar h1{
+    font-size:18px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:.2px;
+    flex:1;
+  }
+  header.appbar .sub{
+    font-size:12px;
+    opacity:.75;
+    margin-top:2px;
+  }
+  .btn-icon{
+    background:rgba(255,255,255,.12);
+    border:none;
+    color:#fff;
+    width:38px;
+    height:38px;
+    border-radius:8px;
+    font-size:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+  .btn-icon:active{background:rgba(255,255,255,.25);}
+  main{
+    max-width:760px;
+    margin:0 auto;
+    padding:14px;
+  }
+  /* ---- Lista de reportes ---- */
+  .tarjeta-reporte{
+    background:var(--blanco);
+    border-radius:var(--radio);
+    box-shadow:var(--sombra);
+    padding:14px 16px;
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    border-left:5px solid var(--azul-500);
+  }
+  .tarjeta-reporte .info{flex:1; min-width:0;}
+  .tarjeta-reporte .titulo{font-weight:700; font-size:15px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .tarjeta-reporte .meta{font-size:12.5px; color:var(--gris-600);}
+  .tarjeta-reporte .monto{font-weight:700; color:var(--azul-700); font-size:15px; white-space:nowrap;}
+  .estado-pill{
+    font-size:11px;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:20px;
+    margin-top:4px;
+    display:inline-block;
+  }
+  .estado-ok{background:var(--verde-bg); color:var(--verde);}
+  .estado-pend{background:#fff4e0; color:#a9660a;}
+  .vacio{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--gris-600);
+  }
+  .vacio .icono{font-size:46px; margin-bottom:10px;}
+  .fab{
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    background:var(--azul-700);
+    color:#fff;
+    border:none;
+    font-size:28px;
+    box-shadow:0 4px 14px rgba(15,48,87,.4);
+    cursor:pointer;
+    z-index:30;
+  }
+  .barra-acciones-lista{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .btn-chip{
+    flex:1;
+    background:var(--blanco);
+    border:1px solid var(--gris-400);
+    color:var(--azul-700);
+    padding:9px 6px;
+    border-radius:8px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  input[type=file].oculto{display:none;}
+
+  /* ---- Editor de reporte ---- */
+  .panel{
+    background:var(--blanco);
+    border-radius:var(--radio);
+    box-shadow:var(--sombra);
+    padding:14px 14px 16px;
+    margin-bottom:14px;
+  }
+  .panel h2{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--gris-600);
+    margin:0 0 10px;
+    font-weight:700;
+  }
+  .grid-2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .campo{margin-bottom:10px;}
+  .campo label{
+    display:block;
+    font-size:12px;
+    color:var(--gris-600);
+    margin-bottom:4px;
+    font-weight:600;
+  }
+  .campo input, .campo textarea, .campo select{
+    width:100%;
+    border:1px solid var(--gris-400);
+    border-radius:8px;
+    padding:9px 10px;
+    font-size:14.5px;
+    font-family:inherit;
+    background:var(--gris-100);
+    color:var(--texto);
+  }
+  .campo input:focus, .campo textarea:focus{
+    outline:none;
+    border-color:var(--azul-500);
+    background:#fff;
+  }
+  .resumen-linea{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    border-bottom:1px solid var(--gris-200);
+    font-size:14px;
+  }
+  .resumen-linea:last-child{border-bottom:none;}
+  .resumen-linea .valor{font-weight:700;}
+  .resumen-linea.total .valor{color:var(--azul-700); font-size:16px;}
+  .pill-diferencia{
+    padding:3px 10px;
+    border-radius:20px;
+    font-weight:700;
+    font-size:13px;
+  }
+  .pill-devolver{background:var(--rojo-bg); color:var(--rojo);}
+  .pill-reembolso{background:var(--verde-bg); color:var(--verde);}
+  .pill-ok{background:var(--gris-200); color:var(--gris-600);}
+
+  /* tabla gastos */
+  .fila-gasto{
+    border:1px solid var(--gris-200);
+    border-radius:9px;
+    padding:10px;
+    margin-bottom:10px;
+    position:relative;
+    background:#fbfcfe;
+  }
+  .fila-gasto .top-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .fila-gasto .top-row .campo{flex:1; margin-bottom:0;}
+  .fila-gasto .grid-3{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .fila-gasto .grid-3 .campo{margin-bottom:0;}
+  .fila-gasto .fila-total{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .fila-gasto .fila-total .total-num{
+    font-weight:700;
+    color:var(--azul-700);
+    font-size:15px;
+  }
+  .fila-gasto .acciones-fila{
+    display:flex;
+    gap:6px;
+  }
+  .btn-mini{
+    border:none;
+    background:var(--azul-100);
+    color:var(--azul-700);
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .btn-mini.rojo{background:var(--rojo-bg); color:var(--rojo);}
+  .miniatura-foto{
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    object-fit:cover;
+    border:1px solid var(--gris-400);
+    cursor:pointer;
+  }
+  .btn-agregar-fila{
+    width:100%;
+    padding:11px;
+    border:2px dashed var(--azul-500);
+    background:var(--azul-100);
+    color:var(--azul-700);
+    font-weight:700;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  .fila-firma{
+    margin-top:16px;
+    text-align:center;
+  }
+  .linea-firma{
+    border-bottom:2px solid var(--gris-400);
+    margin-bottom:6px;
+    padding-top:20px;
+  }
+
+  .barra-botones{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+    margin-top:6px;
+  }
+  .btn{
+    padding:12px 10px;
+    border-radius:9px;
+    border:none;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+  }
+  .btn-primario{background:var(--azul-700); color:#fff;}
+  .btn-whatsapp{background:#25D366; color:#fff;}
+  .btn-correo{background:var(--azul-500); color:#fff;}
+  .btn-secundario{background:var(--gris-200); color:var(--texto);}
+  .btn-peligro{background:var(--rojo-bg); color:var(--rojo);}
+  .btn-full{grid-column:1/3;}
+
+  /* modal foto */
+  .modal-fondo{
+    position:fixed; inset:0; background:rgba(10,20,35,.85);
+    display:none; align-items:center; justify-content:center;
+    z-index:100; padding:20px;
+  }
+  .modal-fondo.activo{display:flex;}
+  .modal-fondo img{max-width:100%; max-height:85vh; border-radius:8px;}
+  .modal-cerrar{
+    position:absolute; top:16px; right:16px;
+    background:#fff; border:none; width:38px; height:38px;
+    border-radius:50%; font-size:18px; cursor:pointer;
+  }
+
+  /* toast */
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--azul-900);
+    color:#fff;
+    padding:11px 20px;
+    border-radius:30px;
+    font-size:13.5px;
+    box-shadow:0 4px 14px rgba(0,0,0,.3);
+    z-index:200;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s;
+  }
+  .toast.mostrar{opacity:1;}
+
+  /* ---- Documento imprimible (para exportar imagen) ---- */
+  #documento{
+    position:fixed;
+    left:-9999px;
+    top:0;
+    width:780px;
+    background:#fff;
+    padding:20px;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#111;
+  }
+  #documento table{width:100%; border-collapse:collapse; font-size:12px;}
+  #documento th, #documento td{border:1px solid #333; padding:5px 6px;}
+  #documento th{background:#dfe8f5; font-weight:700;}
+  #documento .doc-header{text-align:center; font-size:17px; font-weight:800; padding:8px; border:2px solid #111; margin-bottom:10px; background:#f0f0f0;}
+  #documento .doc-sub{text-align:center; font-size:14px; font-weight:700; margin-bottom:10px;}
+  #documento .doc-topinfo{display:flex; justify-content:space-between; margin-bottom:10px; font-size:12.5px;}
+  #documento .doc-topinfo div{border:1px solid #333; padding:6px 10px; border-radius:4px;}
+  #documento .doc-resumen{margin-top:10px; font-size:12.5px;}
+  #documento .doc-resumen div{display:flex; justify-content:space-between; border:1px solid #333; padding:5px 8px;}
+  #documento .doc-firma{margin-top:35px; text-align:center; font-size:12px;}
+  #documento .doc-firma .l{border-top:1px solid #111; width:220px; margin:0 auto 4px;}
+  #documento .foto-mini{width:32px; height:32px; object-fit:cover; border-radius:3px;}
+
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="fila">
+    <button class="btn-icon" id="btnVolver" style="display:none;">&#8592;</button>
+    <div style="flex:1;">
+      <h1 id="tituloApp">ReporteGastos Pro</h1>
+      <div class="sub" id="subApp">Reportes de rendición de gastos</div>
+    </div>
+    <button class="btn-icon" id="btnMenu" title="Copia de seguridad">&#8942;</button>
+  </div>
+</header>
+
+<main>
+  <div id="avisoError" style="display:none; background:#fbe9e7; color:#c0392b; padding:10px 14px; margin:12px auto 0; max-width:730px; border-radius:8px; font-size:13px; font-family:monospace; word-break:break-word;"></div>
+
+  <!-- ===== VISTA LISTA ===== -->
+  <section id="vistaLista">
+    <div class="barra-acciones-lista">
+      <button class="btn-chip" id="btnExportarJSON">&#128190; Copia (JSON)</button>
+      <button class="btn-chip" id="btnImportarJSON">&#128228; Restaurar</button>
+      <input type="file" id="inputJSON" class="oculto" accept="application/json">
+    </div>
+    <div id="listaReportes"></div>
+  </section>
+
+  <!-- ===== VISTA EDITOR ===== -->
+  <section id="vistaEditor" style="display:none;">
+
+    <div class="panel">
+      <h2>Datos del reporte</h2>
+      <div class="campo">
+        <label>Título (ej. Reparación de fibra)</label>
+        <input type="text" id="campoTitulo" placeholder="REPARACIÓN DE FIBRA">
+      </div>
+      <div class="campo">
+        <label>Subtítulo / Motivo (ej. Compra de materiales)</label>
+        <input type="text" id="campoSubtitulo" placeholder="COMPRA DE MATERIALES">
+      </div>
+      <div class="grid-2">
+        <div class="campo">
+          <label>Fecha depósito</label>
+          <input type="date" id="campoFecha">
+        </div>
+        <div class="campo">
+          <label>Monto depósito (S/)</label>
+          <input type="number" step="0.01" id="campoMonto" placeholder="0.00">
+        </div>
+      </div>
+      <div class="campo">
+        <label>Importe otorgado al trabajador (S/)</label>
+        <input type="number" step="0.01" id="campoImporte" placeholder="0.00">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Gastos registrados</h2>
+      <div id="listaGastos"></div>
+      <button class="btn-agregar-fila" id="btnAgregarGasto">+ Agregar gasto</button>
+    </div>
+
+    <div class="panel">
+      <h2>Resumen</h2>
+      <div class="resumen-linea">
+        <span>Monto depósito</span>
+        <span class="valor" id="resMonto">S/ 0.00</span>
+      </div>
+      <div class="resumen-linea"><span>Hospedaje</span><span class="valor" id="resHospedaje">S/ 0.00</span></div>
+      <div class="resumen-linea"><span>Alimentación</span><span class="valor" id="resAlimentacion">S/ 0.00</span></div>
+      <div class="resumen-linea"><span>Movilidad</span><span class="valor" id="resMovilidad">S/ 0.00</span></div>
+      <div class="resumen-linea"><span>Por concepto</span><span class="valor" id="resConcepto">S/ 0.00</span></div>
+      <div class="resumen-linea total">
+        <span>Total gastado</span>
+        <span class="valor" id="resTotal">S/ 0.00</span>
+      </div>
+      <div class="resumen-linea">
+        <span>Importe otorgado</span>
+        <span class="valor" id="resImporte">S/ 0.00</span>
+      </div>
+      <div class="resumen-linea">
+        <span id="resDiferenciaLabel">Diferencia</span>
+        <span class="pill-diferencia pill-ok" id="resDiferencia">S/ 0.00</span>
+      </div>
+      <div class="fila-firma">
+        <div class="campo">
+          <label>Firma colaborador (nombre)</label>
+          <input type="text" id="campoFirma" placeholder="Nombre del colaborador">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Compartir reporte</h2>
+      <div class="barra-botones">
+        <button class="btn btn-primario btn-full" id="btnGuardar">&#128190; Guardar reporte</button>
+        <button class="btn btn-secundario" id="btnExportarImg">&#128247; Exportar imagen</button>
+        <button class="btn btn-whatsapp" id="btnWhatsapp">&#128241; WhatsApp</button>
+        <button class="btn btn-correo btn-full" id="btnCorreo">&#9993; Correo</button>
+        <button class="btn btn-peligro btn-full" id="btnEliminarReporte">Eliminar este reporte</button>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<button class="fab" id="btnNuevoReporte">+</button>
+
+<!-- documento oculto para exportar como imagen -->
+<div id="documento"></div>
+
+<div class="modal-fondo" id="modalFoto">
+  <button class="modal-cerrar" id="cerrarModalFoto">&#10005;</button>
+  <img id="imgModalFoto" src="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+window.addEventListener('error', function(e){
+  const cont = document.getElementById('avisoError');
+  if(cont){
+    cont.style.display = 'block';
+    cont.textContent = 'Error: ' + (e.message || e);
+  }
+});
+try{
+/* ============ ALMACENAMIENTO ============ */
+const CLAVE = 'reporteGastosProV1';
+let reportes = JSON.parse(localStorage.getItem(CLAVE) || '[]');
+let reporteActualId = null;
+let fotoModalActual = null;
+
+function guardarTodo(){
+  localStorage.setItem(CLAVE, JSON.stringify(reportes));
+}
+
+function mostrarToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('mostrar');
+  setTimeout(()=>t.classList.remove('mostrar'), 2200);
+}
+
+function idNuevo(){ return 'r_' + Date.now() + '_' + Math.floor(Math.random()*1000); }
+function idGasto(){ return 'g_' + Date.now() + '_' + Math.floor(Math.random()*1000); }
+
+function moneda(n){
+  n = Number(n)||0;
+  return 'S/ ' + n.toFixed(2);
+}
+
+function hoyISO(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+/* ============ NAVEGACIÓN ============ */
+const vistaLista = document.getElementById('vistaLista');
+const vistaEditor = document.getElementById('vistaEditor');
+const btnVolver = document.getElementById('btnVolver');
+const tituloApp = document.getElementById('tituloApp');
+const subApp = document.getElementById('subApp');
+const fab = document.getElementById('btnNuevoReporte');
+
+function irALista(){
+  reporteActualId = null;
+  vistaEditor.style.display = 'none';
+  vistaLista.style.display = 'block';
+  btnVolver.style.display = 'none';
+  fab.style.display = 'flex';
+  tituloApp.textContent = 'ReporteGastos Pro';
+  subApp.textContent = 'Reportes de rendición de gastos';
+  renderLista();
+}
+
+function irAEditor(id){
+  reporteActualId = id;
+  vistaLista.style.display = 'none';
+  vistaEditor.style.display = 'block';
+  btnVolver.style.display = 'flex';
+  fab.style.display = 'none';
+  const r = obtenerReporte(id);
+  tituloApp.textContent = r.titulo || 'Reporte de gastos';
+  subApp.textContent = r.fechaDeposito ? ('Depósito: ' + r.fechaDeposito) : 'Nuevo reporte';
+  cargarFormulario(r);
+}
+
+btnVolver.addEventListener('click', ()=>{
+  guardarFormularioEnMemoria();
+  irALista();
+});
+
+fab.addEventListener('click', ()=>{
+  const r = {
+    id: idNuevo(),
+    titulo:'',
+    subtitulo:'',
+    fechaDeposito: hoyISO(),
+    montoDeposito:0,
+    importeOtorgado:0,
+    firmaColaborador:'',
+    gastos:[],
+    creado: Date.now()
+  };
+  reportes.unshift(r);
+  guardarTodo();
+  irAEditor(r.id);
+});
+
+/* ============ LISTA ============ */
+function obtenerReporte(id){
+  return reportes.find(r=>r.id===id);
+}
+
+function calcularTotales(r){
+  const totalGastado = (r.gastos||[]).reduce((s,g)=> s + (Number(g.total)||0), 0);
+  const diferencia = (Number(r.importeOtorgado)||0) - totalGastado;
+  return { totalGastado, diferencia };
+}
+
+function subtotales(r){
+  const t = {hospedaje:0, alimentacion:0, movilidad:0, concepto:0};
+  (r.gastos||[]).forEach(g=>{
+    t.hospedaje += Number(g.hospedaje)||0;
+    t.alimentacion += Number(g.alimentacion)||0;
+    t.movilidad += Number(g.movilidad)||0;
+    t.concepto += Number(g.concepto)||0;
+  });
+  return t;
+}
+
+function renderLista(){
+  const cont = document.getElementById('listaReportes');
+  if(reportes.length===0){
+    cont.innerHTML = '<div class="vacio"><div class="icono">&#128203;</div><div>Aún no tienes reportes.<br>Toca el botón + para crear el primero.</div></div>';
+    return;
+  }
+  cont.innerHTML = '';
+  reportes.forEach(r=>{
+    const {totalGastado, diferencia} = calcularTotales(r);
+    const div = document.createElement('div');
+    div.className = 'tarjeta-reporte';
+    let pill = '';
+    if(diferencia > 0.001) pill = '<span class="estado-pill estado-pend">Devolver S/ '+diferencia.toFixed(2)+'</span>';
+    else if(diferencia < -0.001) pill = '<span class="estado-pill estado-ok">Reembolso S/ '+Math.abs(diferencia).toFixed(2)+'</span>';
+    else pill = '<span class="estado-pill estado-ok">Cuadrado</span>';
+    div.innerHTML = `
+      <div class="info">
+        <div class="titulo">${escapeHtml(r.titulo || 'Reporte sin título')}</div>
+        <div class="meta">${escapeHtml(r.subtitulo||'')} ${r.fechaDeposito ? ' · '+r.fechaDeposito : ''}</div>
+        ${pill}
+      </div>
+      <div class="monto">${moneda(totalGastado)}</div>
+    `;
+    div.addEventListener('click', ()=> irAEditor(r.id));
+    cont.appendChild(div);
+  });
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============ FORMULARIO EDITOR ============ */
+const campoTitulo = document.getElementById('campoTitulo');
+const campoSubtitulo = document.getElementById('campoSubtitulo');
+const campoFecha = document.getElementById('campoFecha');
+const campoMonto = document.getElementById('campoMonto');
+const campoImporte = document.getElementById('campoImporte');
+const campoFirma = document.getElementById('campoFirma');
+const listaGastos = document.getElementById('listaGastos');
+
+function cargarFormulario(r){
+  campoTitulo.value = r.titulo||'';
+  campoSubtitulo.value = r.subtitulo||'';
+  campoFecha.value = r.fechaDeposito||'';
+  campoMonto.value = r.montoDeposito||'';
+  campoImporte.value = r.importeOtorgado||'';
+  campoFirma.value = r.firmaColaborador||'';
+  renderGastos(r);
+  actualizarResumen(r);
+}
+
+function guardarFormularioEnMemoria(){
+  const r = obtenerReporte(reporteActualId);
+  if(!r) return;
+  r.titulo = campoTitulo.value;
+  r.subtitulo = campoSubtitulo.value;
+  r.fechaDeposito = campoFecha.value;
+  r.montoDeposito = parseFloat(campoMonto.value)||0;
+  r.importeOtorgado = parseFloat(campoImporte.value)||0;
+  r.firmaColaborador = campoFirma.value;
+  guardarTodo();
+}
+
+[campoTitulo, campoSubtitulo, campoFecha, campoMonto, campoImporte, campoFirma].forEach(el=>{
+  el.addEventListener('input', ()=>{
+    guardarFormularioEnMemoria();
+    const r = obtenerReporte(reporteActualId);
+    actualizarResumen(r);
+    tituloApp.textContent = r.titulo || 'Reporte de gastos';
+  });
+});
+
+function actualizarResumen(r){
+  const {totalGastado, diferencia} = calcularTotales(r);
+  document.getElementById('resMonto').textContent = moneda(r.montoDeposito);
+  document.getElementById('resTotal').textContent = moneda(totalGastado);
+  const st = subtotales(r);
+  document.getElementById('resHospedaje').textContent = moneda(st.hospedaje);
+  document.getElementById('resAlimentacion').textContent = moneda(st.alimentacion);
+  document.getElementById('resMovilidad').textContent = moneda(st.movilidad);
+  document.getElementById('resConcepto').textContent = moneda(st.concepto);
+  document.getElementById('resImporte').textContent = moneda(r.importeOtorgado);
+  const pill = document.getElementById('resDiferencia');
+  const label = document.getElementById('resDiferenciaLabel');
+  if(diferencia > 0.001){
+    label.textContent = 'Devolver a empresa';
+    pill.textContent = moneda(diferencia);
+    pill.className = 'pill-diferencia pill-devolver';
+  } else if(diferencia < -0.001){
+    label.textContent = 'Reembolso a trabajador';
+    pill.textContent = moneda(Math.abs(diferencia));
+    pill.className = 'pill-diferencia pill-reembolso';
+  } else {
+    label.textContent = 'Diferencia';
+    pill.textContent = 'S/ 0.00';
+    pill.className = 'pill-diferencia pill-ok';
+  }
+}
+
+/* ============ GASTOS (filas) ============ */
+function renderGastos(r){
+  listaGastos.innerHTML = '';
+  (r.gastos||[]).forEach(g=>{
+    listaGastos.appendChild(crearFilaGasto(r, g));
+  });
+}
+
+function crearFilaGasto(r, g){
+  const div = document.createElement('div');
+  div.className = 'fila-gasto';
+  div.innerHTML = `
+    <div class="top-row">
+      <div class="campo">
+        <label>Fecha</label>
+        <input type="date" data-campo="fecha" value="${g.fecha||''}">
+      </div>
+      <div class="campo" style="flex:2;">
+        <label>Descripción</label>
+        <input type="text" data-campo="descripcion" placeholder="Ej. Pasaje casa - terminal" value="${escapeHtml(g.descripcion||'')}">
+      </div>
+    </div>
+    <div class="campo">
+      <label>N° Boleta o Factura</label>
+      <input type="text" data-campo="boleta" placeholder="Ej. BP10-00002598" value="${escapeHtml(g.boleta||'')}">
+    </div>
+    <div class="grid-3">
+      <div class="campo">
+        <label>Hospedaje</label>
+        <input type="number" step="0.01" data-campo="hospedaje" value="${g.hospedaje||''}">
+      </div>
+      <div class="campo">
+        <label>Alimentación</label>
+        <input type="number" step="0.01" data-campo="alimentacion" value="${g.alimentacion||''}">
+      </div>
+      <div class="campo">
+        <label>Movilidad</label>
+        <input type="number" step="0.01" data-campo="movilidad" value="${g.movilidad||''}">
+      </div>
+      <div class="campo">
+        <label>Por concepto</label>
+        <input type="number" step="0.01" data-campo="concepto" value="${g.concepto||''}">
+      </div>
+    </div>
+    <div class="fila-total">
+      <div class="total-num">Total: <span class="valor-total">${moneda(g.total)}</span></div>
+      <div class="acciones-fila">
+        ${g.foto ? `<img class="miniatura-foto" data-accion="verfoto" src="${g.foto}">` : ''}
+        <button class="btn-mini" data-accion="camara" title="Tomar foto">&#128247;</button>
+        <button class="btn-mini" data-accion="galeria" title="Elegir de galería">&#128444;</button>
+        <button class="btn-mini rojo" data-accion="borrar">&#128465;</button>
+      </div>
+    </div>
+    <input type="file" class="oculto" data-input-camara accept="image/*" capture="environment">
+    <input type="file" class="oculto" data-input-galeria accept="image/*">
+  `;
+
+  function recalcularTotalFila(){
+    const hos = parseFloat(div.querySelector('[data-campo="hospedaje"]').value)||0;
+    const alim = parseFloat(div.querySelector('[data-campo="alimentacion"]').value)||0;
+    const mov = parseFloat(div.querySelector('[data-campo="movilidad"]').value)||0;
+    const con = parseFloat(div.querySelector('[data-campo="concepto"]').value)||0;
+    g.total = hos + alim + mov + con;
+    div.querySelector('.valor-total').textContent = moneda(g.total);
+  }
+
+  div.querySelectorAll('input[data-campo]').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const campo = inp.getAttribute('data-campo');
+      if(['hospedaje','alimentacion','movilidad','concepto'].includes(campo)){
+        g[campo] = parseFloat(inp.value)||0;
+        recalcularTotalFila();
+      } else {
+        g[campo] = inp.value;
+      }
+      const r2 = obtenerReporte(reporteActualId);
+      guardarTodo();
+      actualizarResumen(r2);
+    });
+  });
+
+  function manejarArchivoFoto(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      g.foto = ev.target.result;
+      guardarTodo();
+      const r2 = obtenerReporte(reporteActualId);
+      renderGastos(r2);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const inputCamara = div.querySelector('[data-input-camara]');
+  const inputGaleria = div.querySelector('[data-input-galeria]');
+  div.querySelector('[data-accion="camara"]').addEventListener('click', ()=> inputCamara.click());
+  div.querySelector('[data-accion="galeria"]').addEventListener('click', ()=> inputGaleria.click());
+  inputCamara.addEventListener('change', manejarArchivoFoto);
+  inputGaleria.addEventListener('change', manejarArchivoFoto);
+
+  const miniatura = div.querySelector('[data-accion="verfoto"]');
+  if(miniatura){
+    miniatura.addEventListener('click', ()=>{
+      document.getElementById('imgModalFoto').src = g.foto;
+      document.getElementById('modalFoto').classList.add('activo');
+    });
+  }
+
+  div.querySelector('[data-accion="borrar"]').addEventListener('click', ()=>{
+    if(!confirm('¿Eliminar este gasto?')) return;
+    const r2 = obtenerReporte(reporteActualId);
+    r2.gastos = r2.gastos.filter(x=>x.id!==g.id);
+    guardarTodo();
+    renderGastos(r2);
+    actualizarResumen(r2);
+  });
+
+  return div;
+}
+
+document.getElementById('btnAgregarGasto').addEventListener('click', ()=>{
+  const r = obtenerReporte(reporteActualId);
+  const nuevo = { id: idGasto(), fecha: r.fechaDeposito || hoyISO(), descripcion:'', boleta:'', hospedaje:0, alimentacion:0, movilidad:0, concepto:0, total:0, foto:null };
+  r.gastos = r.gastos || [];
+  r.gastos.push(nuevo);
+  guardarTodo();
+  renderGastos(r);
+});
+
+document.getElementById('cerrarModalFoto').addEventListener('click', ()=>{
+  document.getElementById('modalFoto').classList.remove('activo');
+});
+
+/* ============ GUARDAR / ELIMINAR ============ */
+document.getElementById('btnGuardar').addEventListener('click', ()=>{
+  guardarFormularioEnMemoria();
+  mostrarToast('Reporte guardado');
+});
+
+document.getElementById('btnEliminarReporte').addEventListener('click', ()=>{
+  if(!confirm('¿Eliminar este reporte por completo? Esta acción no se puede deshacer.')) return;
+  reportes = reportes.filter(r=>r.id!==reporteActualId);
+  guardarTodo();
+  irALista();
+  mostrarToast('Reporte eliminado');
+});
+
+/* ============ EXPORTAR / RESTAURAR JSON (todos los reportes) ============ */
+document.getElementById('btnExportarJSON').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(reportes, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'reportegastos_backup_' + hoyISO() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  mostrarToast('Copia de seguridad descargada');
+});
+
+document.getElementById('btnImportarJSON').addEventListener('click', ()=>{
+  document.getElementById('inputJSON').click();
+});
+document.getElementById('inputJSON').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const datos = JSON.parse(ev.target.result);
+      if(!Array.isArray(datos)) throw new Error('Formato inválido');
+      if(!confirm('Esto reemplazará tus reportes actuales por los del archivo. ¿Continuar?')) return;
+      reportes = datos;
+      guardarTodo();
+      irALista();
+      mostrarToast('Reportes restaurados');
+    }catch(err){
+      alert('El archivo no es una copia de seguridad válida.');
+    }
+  };
+  reader.readAsText(file);
+});
+
+/* ============ MENÚ (respaldo rápido desde editor también) ============ */
+document.getElementById('btnMenu').addEventListener('click', ()=>{
+  if(vistaEditor.style.display !== 'none'){
+    guardarFormularioEnMemoria();
+  }
+  document.getElementById('btnExportarJSON').click();
+});
+
+/* ============ GENERAR DOCUMENTO PARA EXPORTAR / COMPARTIR ============ */
+function construirDocumento(r){
+  const {totalGastado, diferencia} = calcularTotales(r);
+  const sub = subtotales(r);
+  let filaDif = '';
+  if(diferencia > 0.001){
+    filaDif = `<div><span>Devolver a empresa</span><span>${moneda(diferencia)}</span></div>`;
+  } else if(diferencia < -0.001){
+    filaDif = `<div><span>Reembolso a trabajador</span><span>${moneda(Math.abs(diferencia))}</span></div>`;
+  } else {
+    filaDif = `<div><span>Diferencia</span><span>S/ 0.00</span></div>`;
+  }
+
+  let filasTabla = (r.gastos||[]).map(g=>`
+    <tr>
+      <td>${escapeHtml(g.fecha||'')}</td>
+      <td>${escapeHtml(g.descripcion||'')}</td>
+      <td>${escapeHtml(g.boleta||'')}</td>
+      <td style="text-align:right;">${g.hospedaje?g.hospedaje.toFixed(2):''}</td>
+      <td style="text-align:right;">${g.alimentacion?g.alimentacion.toFixed(2):''}</td>
+      <td style="text-align:right;">${g.movilidad?g.movilidad.toFixed(2):''}</td>
+      <td style="text-align:right;">${g.concepto?g.concepto.toFixed(2):''}</td>
+      <td style="text-align:right; font-weight:700;">${(g.total||0).toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const doc = document.getElementById('documento');
+  doc.innerHTML = `
+    <div class="doc-header">${escapeHtml(r.titulo || 'REPORTE DE GASTOS')}</div>
+    ${r.subtitulo ? `<div class="doc-sub">${escapeHtml(r.subtitulo)}</div>` : ''}
+    <div class="doc-topinfo">
+      <div><b>Fecha depósito:</b> ${r.fechaDeposito||'-'}</div>
+      <div><b>Monto depósito:</b> ${moneda(r.montoDeposito)}</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th><th>Descripción</th><th>Boleta/Factura</th><th>Hosp.</th><th>Alim.</th><th>Movilidad</th><th>Concepto</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filasTabla || '<tr><td colspan="8" style="text-align:center;color:#777;">Sin gastos registrados</td></tr>'}
+      </tbody>
+    </table>
+    <div class="doc-resumen">
+      <div><span>Hospedaje</span><span>${moneda(sub.hospedaje)}</span></div>
+      <div><span>Alimentación</span><span>${moneda(sub.alimentacion)}</span></div>
+      <div><span>Movilidad</span><span>${moneda(sub.movilidad)}</span></div>
+      <div><span>Por concepto</span><span>${moneda(sub.concepto)}</span></div>
+      <div style="font-weight:700;"><span>Total gastado</span><span>${moneda(totalGastado)}</span></div>
+      <div><span>Importe otorgado</span><span>${moneda(r.importeOtorgado)}</span></div>
+      ${filaDif}
+    </div>
+    <div class="doc-firma">
+      <div class="l"></div>
+      Firma colaborador: ${escapeHtml(r.firmaColaborador||'____________________')}
+    </div>
+  `;
+  return doc;
+}
+
+async function generarImagenBlob(r){
+  const doc = construirDocumento(r);
+  doc.style.left = '0px';
+  doc.style.top = '0px';
+  doc.style.position = 'absolute';
+  doc.style.zIndex = '-1';
+  const canvas = await html2canvas(doc, {scale:2, backgroundColor:'#ffffff'});
+  doc.style.left = '-9999px';
+  doc.style.position = 'fixed';
+  return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+function textoResumenReporte(r){
+  const {totalGastado, diferencia} = calcularTotales(r);
+  let dif = diferencia > 0.001 ? `Devolver a empresa: ${moneda(diferencia)}`
+    : diferencia < -0.001 ? `Reembolso a trabajador: ${moneda(Math.abs(diferencia))}`
+    : 'Cuenta cuadrada, sin diferencia.';
+  return `Reporte de gastos: ${r.titulo||''} ${r.subtitulo||''}\n`+
+    `Fecha depósito: ${r.fechaDeposito||'-'}\n`+
+    `Monto depósito: ${moneda(r.montoDeposito)}\n`+
+    `Total gastado: ${moneda(totalGastado)}\n`+
+    `Importe otorgado: ${moneda(r.importeOtorgado)}\n`+
+    `${dif}`;
+}
+
+function dataURLaBlob(dataurl){
+  const arr = dataurl.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+  return new Blob([u8arr], {type:mime});
+}
+
+async function construirArchivosParaCompartir(r){
+  const archivos = [];
+  const blobReporte = await generarImagenBlob(r);
+  const nombreReporte = (r.titulo||'reporte').replace(/[^a-z0-9]+/gi,'_') + '.png';
+  archivos.push(new File([blobReporte], nombreReporte, {type:'image/png'}));
+
+  (r.gastos||[]).forEach((g, i)=>{
+    if(g.foto){
+      try{
+        const blob = dataURLaBlob(g.foto);
+        const ext = (blob.type && blob.type.includes('png')) ? 'png' : 'jpg';
+        const etiqueta = g.boleta ? g.boleta.replace(/[^a-z0-9]+/gi,'_') : ('gasto_'+(i+1));
+        archivos.push(new File([blob], 'boleta_' + etiqueta + '.' + ext, {type: blob.type || 'image/jpeg'}));
+      }catch(e){ /* si la foto está corrupta, se omite */ }
+    }
+  });
+  return archivos;
+}
+
+function descargarArchivos(archivos){
+  archivos.forEach((archivo, idx)=>{
+    setTimeout(()=>{
+      const url = URL.createObjectURL(archivo);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = archivo.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, idx * 500);
+  });
+}
+
+document.getElementById('btnExportarImg').addEventListener('click', async ()=>{
+  guardarFormularioEnMemoria();
+  const r = obtenerReporte(reporteActualId);
+  mostrarToast('Generando imagen...');
+  try{
+    const blob = await generarImagenBlob(r);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (r.titulo||'reporte').replace(/[^a-z0-9]+/gi,'_') + '.png';
+    a.click();
+    URL.revokeObjectURL(url);
+    mostrarToast('Imagen descargada');
+  }catch(err){
+    mostrarToast('No se pudo generar la imagen');
+  }
+});
+
+async function compartirArchivoONavegador(r){
+  const archivos = await construirArchivosParaCompartir(r);
+
+  if(navigator.canShare && navigator.canShare({files:archivos})){
+    try{
+      await navigator.share({ files:archivos });
+      return true;
+    }catch(err){
+      return false;
+    }
+  }
+  return false;
+}
+
+document.getElementById('btnWhatsapp').addEventListener('click', async ()=>{
+  guardarFormularioEnMemoria();
+  const r = obtenerReporte(reporteActualId);
+  mostrarToast('Preparando reporte y fotos...');
+  const compartido = await compartirArchivoONavegador(r);
+  if(!compartido){
+    const archivos = await construirArchivosParaCompartir(r);
+    descargarArchivos(archivos);
+    mostrarToast('Imágenes descargadas, ábrelas en WhatsApp y adjúntalas');
+    window.open('https://wa.me/', '_blank');
+  }
+});
+
+document.getElementById('btnCorreo').addEventListener('click', async ()=>{
+  guardarFormularioEnMemoria();
+  const r = obtenerReporte(reporteActualId);
+  mostrarToast('Preparando reporte y fotos...');
+  const compartido = await compartirArchivoONavegador(r);
+  if(!compartido){
+    const archivos = await construirArchivosParaCompartir(r);
+    descargarArchivos(archivos);
+    mostrarToast('Imágenes descargadas, adjúntalas en tu correo');
+    window.location.href = 'mailto:';
+  }
+});
+
+/* ============ INICIO ============ */
+irALista();
+
+}catch(errorInicio){
+  document.body.innerHTML = '<div style="padding:24px;font-family:sans-serif;">' +
+    '<h2 style="color:#c0392b;">Ocurrió un error al cargar la app</h2>' +
+    '<p>Copia este mensaje y compártelo para poder solucionarlo:</p>' +
+    '<pre style="background:#f4f4f4;padding:12px;border-radius:8px;white-space:pre-wrap;font-size:13px;">' +
+    (errorInicio && errorInicio.stack ? errorInicio.stack : errorInicio) +
+    '</pre></div>';
+}
+</script>
+</body>
+</html>
